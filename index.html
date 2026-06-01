@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAST · Asistente IIT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+<style>
+  :root{
+    --bg:#080b10; --bg2:#0d121b; --panel:#0f1620;
+    --cyan:#00d4ff; --green:#10b981; --purple:#7c3aed;
+    --txt:#e6edf3; --dim:#7c8a9c; --line:rgba(0,212,255,.14);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Space Mono",monospace;
+    background:
+      radial-gradient(900px 500px at 80% -10%, rgba(124,58,237,.12), transparent 60%),
+      radial-gradient(700px 600px at -10% 110%, rgba(0,212,255,.10), transparent 55%),
+      var(--bg);
+    color:var(--txt); min-height:100vh; padding:28px 18px;
+    background-attachment:fixed;
+  }
+  /* faint grid texture */
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; opacity:.4;
+    background-image:linear-gradient(rgba(0,212,255,.04) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(0,212,255,.04) 1px,transparent 1px);
+    background-size:42px 42px;
+  }
+  .wrap{max-width:760px;margin:0 auto;position:relative;z-index:1}
+
+  header{display:flex;align-items:center;gap:16px;margin-bottom:6px}
+  .chip{width:48px;height:48px;flex:none}
+  h1{font-family:"Syne",sans-serif;font-weight:800;font-size:1.55rem;letter-spacing:.5px;line-height:1}
+  h1 span{color:var(--cyan)}
+  .sub{color:var(--dim);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;margin-top:6px}
+
+  .status{
+    display:flex;align-items:center;gap:10px;margin:22px 0 18px;
+    border:1px solid var(--line);background:var(--panel);
+    padding:12px 16px;border-radius:12px;font-size:.82rem;
+  }
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--dim);box-shadow:0 0 0 0 transparent;flex:none}
+  .dot.on{background:var(--green);box-shadow:0 0 12px var(--green);animation:pulse 1.8s infinite}
+  .dot.wait{background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .status .dev{color:var(--cyan);font-weight:700}
+  google-cast-launcher{
+    --connected-color:var(--green); --disconnected-color:var(--cyan);
+    width:34px;height:34px;cursor:pointer;margin-left:auto;flex:none;
+  }
+
+  .card{
+    border:1px solid var(--line);background:linear-gradient(180deg,var(--panel),var(--bg2));
+    border-radius:14px;padding:18px;margin-bottom:16px;
+  }
+  .label{font-size:.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:10px}
+
+  .src{display:flex;gap:8px;flex-wrap:wrap}
+  input[type=text]{
+    flex:1;min-width:240px;background:#06090e;border:1px solid var(--line);
+    color:var(--txt);padding:11px 13px;border-radius:9px;font-family:inherit;font-size:.8rem;
+  }
+  input[type=text]:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 2px rgba(0,212,255,.15)}
+  .presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .preset{
+    background:transparent;border:1px solid var(--line);color:var(--dim);
+    padding:7px 12px;border-radius:20px;font-family:inherit;font-size:.72rem;cursor:pointer;transition:.18s;
+  }
+  .preset:hover{border-color:var(--cyan);color:var(--cyan)}
+  .preset.active{border-color:var(--purple);color:#fff;background:rgba(124,58,237,.18)}
+
+  video{width:100%;border-radius:10px;background:#000;margin-top:4px;aspect-ratio:16/9}
+
+  .btn{
+    border:none;font-family:"Syne",sans-serif;font-weight:600;cursor:pointer;
+    padding:12px 18px;border-radius:9px;font-size:.85rem;letter-spacing:.4px;transition:.18s;
+  }
+  .btn-main{background:var(--cyan);color:#04121a;width:100%;margin-top:14px}
+  .btn-main:hover{box-shadow:0 0 22px rgba(0,212,255,.45)}
+  .btn:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+
+  .controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .ctrl{
+    width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:#06090e;
+    color:var(--cyan);font-size:1rem;cursor:pointer;display:grid;place-items:center;transition:.18s;flex:none;
+  }
+  .ctrl:hover:not(:disabled){border-color:var(--cyan);box-shadow:0 0 14px rgba(0,212,255,.35)}
+  .ctrl:disabled{opacity:.3;cursor:not-allowed}
+  .seek-row{flex:1;min-width:200px;display:flex;align-items:center;gap:10px}
+  .time{font-size:.72rem;color:var(--dim);min-width:42px;text-align:center}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;flex:1;height:4px;border-radius:4px;
+    background:linear-gradient(90deg,var(--cyan) var(--pct,0%),#1b2531 var(--pct,0%));cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--cyan);
+    box-shadow:0 0 8px var(--cyan);cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;border:none;border-radius:50%;background:var(--cyan)}
+  .vol{display:flex;align-items:center;gap:8px}
+  .vol input[type=range]{width:80px;background:linear-gradient(90deg,var(--green) var(--vpct,50%),#1b2531 var(--vpct,50%))}
+  .vol input[type=range]::-webkit-slider-thumb{background:var(--green);box-shadow:0 0 8px var(--green)}
+
+  .log{
+    background:#05080c;border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;font-size:.72rem;height:120px;overflow-y:auto;color:var(--dim);line-height:1.7;
+  }
+  .log b{color:var(--cyan)}
+  .log .t{color:#3d4a5a}
+
+  .note{font-size:.72rem;color:var(--dim);line-height:1.6;margin-top:6px}
+  .note code{color:var(--green)}
+  footer{text-align:center;color:#3d4a5a;font-size:.68rem;margin-top:18px;letter-spacing:1px}
+  .unsupported{display:none;border-color:rgba(124,58,237,.4);color:#caa6ff;background:rgba(124,58,237,.08)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <!-- Logo IIT-CORE embebido como geometría SVG nativa -->
+    <svg class="chip" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="IIT-CORE REV.2026">
+      <rect x="14" y="14" width="36" height="36" rx="4" stroke="#00d4ff" stroke-width="2"/>
+      <rect x="22" y="22" width="20" height="20" rx="2" stroke="#10b981" stroke-width="1.5"/>
+      <text x="32" y="36" font-family="Syne, sans-serif" font-size="9" font-weight="800" fill="#e6edf3" text-anchor="middle">IIT</text>
+      <g stroke="#00d4ff" stroke-width="2">
+        <line x1="22" y1="14" x2="22" y2="7"/><line x1="32" y1="14" x2="32" y2="7"/><line x1="42" y1="14" x2="42" y2="7"/>
+        <line x1="22" y1="50" x2="22" y2="57"/><line x1="32" y1="50" x2="32" y2="57"/><line x1="42" y1="50" x2="42" y2="57"/>
+        <line x1="14" y1="22" x2="7" y2="22"/><line x1="14" y1="32" x2="7" y2="32"/><line x1="14" y1="42" x2="7" y2="42"/>
+        <line x1="50" y1="22" x2="57" y2="22"/><line x1="50" y1="32" x2="57" y2="32"/><line x1="50" y1="42" x2="57" y2="42"/>
+      </g>
+    </svg>
+    <div>
+      <h1>CAST<span>·</span>IIT</h1>
+      <div class="sub">Web Sender · Google Cast</div>
+    </div>
+  </header>
+
+  <div class="status unsupported" id="unsupported">
+    <span class="dot"></span>
+    <span>Este navegador no soporta Google Cast. Usa Chrome o Edge (escritorio o Android) y abre el sitio por HTTPS.</span>
+  </div>
+
+  <div class="status" id="status">
+    <span class="dot" id="dot"></span>
+    <span id="statusTxt">Inicializando Cast…</span>
+    <google-cast-launcher id="castbtn"></google-cast-launcher>
+  </div>
+
+  <div class="card">
+    <div class="label">Fuente multimedia</div>
+    <div class="src">
+      <input type="text" id="url" placeholder="https://…/video.mp4" />
+    </div>
+    <div class="presets" id="presets">
+      <button class="preset active" data-url="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" data-title="Big Buck Bunny">Big Buck Bunny</button>
+      <button class="preset" data-url="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" data-title="Elephants Dream">Elephants Dream</button>
+      <button class="preset" data-url="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" data-title="For Bigger Blazes">For Bigger Blazes</button>
+    </div>
+    <video id="preview" controls playsinline preload="metadata"></video>
+    <button class="btn btn-main" id="loadBtn">Reproducir en la TV ▶</button>
+    <p class="note">Pulsa el ícono Cast (arriba a la derecha), elige tu Chromecast/Smart TV y luego este botón carga el video en el receptor. La reproducción corre en la TV; este equipo queda como control remoto.</p>
+  </div>
+
+  <div class="card">
+    <div class="label">Control remoto</div>
+    <div class="controls">
+      <button class="ctrl" id="playPause" disabled>▶</button>
+      <button class="ctrl" id="stop" disabled>■</button>
+      <div class="seek-row">
+        <span class="time" id="cur">0:00</span>
+        <input type="range" id="seek" min="0" max="100" value="0" disabled>
+        <span class="time" id="dur">0:00</span>
+      </div>
+      <div class="vol">
+        <span style="color:var(--dim);font-size:.8rem">🔊</span>
+        <input type="range" id="vol" min="0" max="100" value="50" disabled>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Registro de eventos</div>
+    <div class="log" id="log"></div>
+  </div>
+
+  <footer>INFRAESTRUCTURA-IT · IIT-CORE / REV.2026 · Construye · Conecta · Evoluciona</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var remotePlayer = null, remotePlayerController = null;
+  var seekEl = document.getElementById('seek');
+  var volEl  = document.getElementById('vol');
+  var seeking = false;
+
+  function $(id){ return document.getElementById(id); }
+
+  function log(msg, kind){
+    var box = $('log');
+    var time = new Date().toLocaleTimeString('es-CO',{hour12:false});
+    var line = document.createElement('div');
+    var tag = kind ? '<b>['+kind+']</b> ' : '';
+    line.innerHTML = '<span class="t">'+time+'</span> '+tag+msg;
+    box.appendChild(line);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function fmt(s){
+    s = Math.floor(s||0);
+    var m = Math.floor(s/60), sec = s%60;
+    return m+':'+(sec<10?'0':'')+sec;
+  }
+
+  // ---- Estado de la fuente seleccionada ----
+  var current = {
+    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    title: 'Big Buck Bunny'
+  };
+  $('url').value = current.url;
+  $('preview').src = current.url;
+
+  $('presets').addEventListener('click', function(e){
+    var b = e.target.closest('.preset');
+    if(!b) return;
+    document.querySelectorAll('.preset').forEach(function(p){ p.classList.remove('active'); });
+    b.classList.add('active');
+    current.url = b.getAttribute('data-url');
+    current.title = b.getAttribute('data-title');
+    $('url').value = current.url;
+    $('preview').src = current.url;
+    log('Fuente: '+current.title);
+  });
+
+  $('url').addEventListener('change', function(){
+    current.url = this.value.trim();
+    current.title = current.url.split('/').pop() || 'Stream';
+    $('preview').src = current.url;
+    document.querySelectorAll('.preset').forEach(function(p){ p.classList.remove('active'); });
+    log('Fuente personalizada: '+current.title);
+  });
+
+  // ====== Inicialización del Cast SDK ======
+  window.__onGCastApiAvailable = function(isAvailable){
+    if(isAvailable){
+      initCast();
+    } else {
+      $('unsupported').style.display = 'flex';
+      $('status').style.display = 'none';
+      log('Google Cast no disponible en este navegador.', 'ERR');
+    }
+  };
+
+  function initCast(){
+    var ctx = cast.framework.CastContext.getInstance();
+    ctx.setOptions({
+      receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+      autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+    });
+
+    remotePlayer = new cast.framework.RemotePlayer();
+    remotePlayerController = new cast.framework.RemotePlayerController(remotePlayer);
+
+    remotePlayerController.addEventListener(
+      cast.framework.RemotePlayerEventType.IS_CONNECTED_CHANGED, onConnection);
+    remotePlayerController.addEventListener(
+      cast.framework.RemotePlayerEventType.IS_PAUSED_CHANGED, syncPlayPause);
+    remotePlayerController.addEventListener(
+      cast.framework.RemotePlayerEventType.CURRENT_TIME_CHANGED, syncTime);
+    remotePlayerController.addEventListener(
+      cast.framework.RemotePlayerEventType.DURATION_CHANGED, syncTime);
+    remotePlayerController.addEventListener(
+      cast.framework.RemotePlayerEventType.VOLUME_LEVEL_CHANGED, syncVolume);
+
+    ctx.addEventListener(
+      cast.framework.CastContextEventType.SESSION_STATE_CHANGED, onSessionState);
+    ctx.addEventListener(
+      cast.framework.CastContextEventType.CAST_STATE_CHANGED, onCastState);
+
+    setStatus('idle', 'Listo. Pulsa el ícono Cast para buscar dispositivos.');
+    log('Cast SDK inicializado.', 'OK');
+  }
+
+  function setStatus(state, txt){
+    var dot = $('dot');
+    dot.className = 'dot' + (state==='connected'?' on':state==='waiting'?' wait':'');
+    $('statusTxt').innerHTML = txt;
+  }
+
+  function onCastState(e){
+    // NO_DEVICES_AVAILABLE / NOT_CONNECTED / CONNECTING / CONNECTED
+    if(e.castState === 'NO_DEVICES_AVAILABLE'){
+      setStatus('idle','No se detectan dispositivos Cast en la red.');
+    } else if(e.castState === 'NOT_CONNECTED'){
+      setStatus('idle','Dispositivos disponibles. Pulsa el ícono Cast.');
+    } else if(e.castState === 'CONNECTING'){
+      setStatus('waiting','Conectando…');
+    }
+  }
+
+  function onSessionState(e){
+    var S = cast.framework.SessionState;
+    if(e.sessionState === S.SESSION_STARTED || e.sessionState === S.SESSION_RESUMED){
+      var session = cast.framework.CastContext.getInstance().getCurrentSession();
+      var name = session && session.getCastDevice ? session.getCastDevice().friendlyName : 'receptor';
+      setStatus('connected','Conectado a <span class="dev">'+name+'</span>');
+      log('Sesión iniciada con '+name+'.', 'OK');
+    } else if(e.sessionState === S.SESSION_ENDED){
+      setStatus('idle','Sesión finalizada.');
+      log('Sesión finalizada.');
+    }
+  }
+
+  function onConnection(){
+    var connected = remotePlayer.isConnected;
+    ['playPause','stop','seek','vol'].forEach(function(id){ $(id).disabled = !connected; });
+    if(!connected){ setStatus('idle','Desconectado.'); }
+  }
+
+  // ====== Cargar media en el receptor ======
+  $('loadBtn').addEventListener('click', function(){
+    var session = cast.framework.CastContext.getInstance ?
+      cast.framework.CastContext.getInstance().getCurrentSession() : null;
+    if(!session){
+      log('Sin sesión activa: pulsa primero el ícono Cast y elige un dispositivo.', 'ERR');
+      setStatus('waiting','Selecciona un dispositivo con el ícono Cast →');
+      return;
+    }
+    var mediaInfo = new chrome.cast.media.MediaInfo(current.url, 'video/mp4');
+    mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
+    mediaInfo.metadata.title = current.title;
+    mediaInfo.metadata.subtitle = 'InfraestructuraIT';
+    var request = new chrome.cast.media.LoadRequest(mediaInfo);
+    log('Enviando "'+current.title+'" al receptor…');
+    session.loadMedia(request).then(function(){
+      log('Media cargada y reproduciendo en la TV.', 'OK');
+    }, function(err){
+      log('Error al cargar: '+JSON.stringify(err), 'ERR');
+    });
+  });
+
+  // ====== Controles remotos ======
+  $('playPause').addEventListener('click', function(){
+    if(remotePlayerController) remotePlayerController.playOrPause();
+  });
+  $('stop').addEventListener('click', function(){
+    if(remotePlayerController) remotePlayerController.stop();
+  });
+  seekEl.addEventListener('input', function(){ seeking = true; });
+  seekEl.addEventListener('change', function(){
+    if(remotePlayer && remotePlayer.duration){
+      remotePlayer.currentTime = (seekEl.value/100) * remotePlayer.duration;
+      remotePlayerController.seek();
+    }
+    seeking = false;
+  });
+  volEl.addEventListener('input', function(){
+    volEl.style.setProperty('--vpct', volEl.value + '%');
+    if(remotePlayer){
+      remotePlayer.volumeLevel = volEl.value/100;
+      remotePlayerController.setVolumeLevel();
+    }
+  });
+
+  function syncPlayPause(){
+    $('playPause').textContent = remotePlayer.isPaused ? '▶' : '❚❚';
+  }
+  function syncTime(){
+    var d = remotePlayer.duration || 0, c = remotePlayer.currentTime || 0;
+    $('cur').textContent = fmt(c);
+    $('dur').textContent = fmt(d);
+    if(!seeking && d){
+      var pct = (c/d)*100;
+      seekEl.value = pct;
+      seekEl.style.setProperty('--pct', pct + '%');
+    }
+  }
+  function syncVolume(){
+    var v = Math.round((remotePlayer.volumeLevel||0)*100);
+    volEl.value = v;
+    volEl.style.setProperty('--vpct', v + '%');
+  }
+
+  log('Interfaz lista. Esperando al SDK de Cast…');
+})();
+</script>
+</body>
+</html>
