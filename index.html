@@ -168,6 +168,19 @@
   </div>
 
   <div class="card">
+    <div class="label">YouTube</div>
+    <div class="src">
+      <input type="text" id="ytUrl" placeholder="Pega el enlace de YouTube o el ID…" />
+      <button class="btn" id="ytLoad" style="background:var(--purple);color:#fff">Cargar</button>
+    </div>
+    <div id="ytWrap" style="display:none;margin-top:14px">
+      <iframe id="ytFrame" style="width:100%;aspect-ratio:16/9;border:0;border-radius:10px;background:#000"
+              allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <p class="note">YouTube usa su <b>propio</b> receptor Cast. Reproduce el video aquí y pulsa el <b>ícono Cast dentro del reproductor de YouTube</b> (no el de arriba) para mandarlo a la TV con calidad completa. Alternativa universal: Chrome → menú ⋮ → <code>Transmitir → Transmitir pestaña</code>.</p>
+  </div>
+
+  <div class="card">
     <div class="label">Control remoto</div>
     <div class="controls">
       <button class="ctrl" id="playPause" disabled>▶</button>
@@ -246,6 +259,38 @@
     document.querySelectorAll('.preset').forEach(function(p){ p.classList.remove('active'); });
     log('Fuente personalizada: '+current.title);
   });
+
+  // ====== YouTube embebido ======
+  function youtubeId(input){
+    input = (input||'').trim();
+    if(/^[A-Za-z0-9_-]{11}$/.test(input)) return input; // ID directo
+    var patterns = [
+      /[?&]v=([A-Za-z0-9_-]{11})/,        // watch?v=
+      /youtu\.be\/([A-Za-z0-9_-]{11})/,   // youtu.be/
+      /\/embed\/([A-Za-z0-9_-]{11})/,     // /embed/
+      /\/shorts\/([A-Za-z0-9_-]{11})/,    // /shorts/
+      /\/live\/([A-Za-z0-9_-]{11})/       // /live/
+    ];
+    for(var i=0;i<patterns.length;i++){
+      var m = input.match(patterns[i]);
+      if(m) return m[1];
+    }
+    return null;
+  }
+
+  function loadYouTube(){
+    var id = youtubeId($('ytUrl').value);
+    if(!id){
+      log('Enlace de YouTube no reconocido. Usa una URL watch?v=, youtu.be o el ID de 11 caracteres.', 'ERR');
+      return;
+    }
+    $('ytFrame').src = 'https://www.youtube.com/embed/' + id + '?enablejsapi=1&rel=0';
+    $('ytWrap').style.display = 'block';
+    log('YouTube cargado (ID: '+id+'). Usa el ícono Cast del reproductor de YouTube.', 'OK');
+  }
+
+  $('ytLoad').addEventListener('click', loadYouTube);
+  $('ytUrl').addEventListener('keydown', function(e){ if(e.key === 'Enter') loadYouTube(); });
 
   // ====== Inicialización del Cast SDK ======
   window.__onGCastApiAvailable = function(isAvailable){
